@@ -1,0 +1,15 @@
+#install with: conda env create -f tf_gpu_test_env.yml
+
+name: tf_gpu_test_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - tensorflow[and-cuda] 
+      - tensorflow-datasets
+
+
+

@@ -1,0 +1,69 @@
+"""Notes
+- Got TF 2.16.2 working fine
+- No GPU, as expected. Guess I need the cuda toolkit and cuDNN installed.
+
+Trying:
+No nvidia toolkit found with:
+-nvcc --version
+
+Added cuDNN and cudatoolkit to yaml
+
+Activate env and run:
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+nano $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+export PATH=$CONDA_PREFIX/bin:$PATH
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+conda deactivate
+conda activate tf_gpu_test_env
+
+
+See what version of cuDNN and CUDA are needed in the GPU table on TF website:
+https://www.tensorflow.org/install/source#tested_build_configurations
+
+See what version are avialable with conda:
+conda search cudatoolkit
+conda search cudnn
+
+Download and Pin the CUDA Repository:
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+
+Download and Install the CUDA Repository Package:
+wget https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda-repo-ubuntu2204-12-3-local_12.3.0-545.23.06-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2204-12-3-local_12.3.0-545.23.06-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2204-12-3-local/cuda-*-keyring.gpg /usr/share/keyrings/
+
+Update and Install CUDA Toolkit:
+sudo apt-get update
+sudo apt-get -y install cuda-toolkit-12-3
+
+SUMMARY
+Most up to date notes:
+- so tf needs a specific version of cuda and cudnn. but, conda cant find/install these.
+If I instead try to install manually from nvidia it fails to install with 'impossible situation' 
+due to 'unmet dependances'. I suspect as I have ubuntu 24.04 not 22.04?
+- Could instead use docker, but this looks complicated to learn quickly.
+- I am however now just checking whether I can get conda and my gpu to work with any old version 
+of TF, so trying a tried and tested set with tf 2.15.0.
+- Took instructions from this blog post: https://medium.com/@dev-charodeyka/tensorflow-conda-nvidia-gpu-on-ubuntu-22-04-3-lts-ad61c1d9ee32.
+With one change being that I want to be able to install from a yaml file. So the steps:
+- Create tf_gpu_test_env.yml file:
+```name: tf_gpu_test_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - tensorflow[and-cuda]
+      - tensorflow-datasets```
+- One concern, this doesn't set the TF version. So how do you specify this? Apparently you just put `tensorflow==2.15[and-cuda]` in the yml
+- This installed the latets tf version and all is working! The paired isntalled of tf and cuda is clearly key.
+- Now for Perch, I know it can work, but I don't know if the paired tf and cuda install will work with poetry. So, perhaps I make a conda env
+and from inside this I install poetry. Hopefully it will see tf installed and skip this, and tf will be a happy chap because the broader conda 
+env has the right cuda stuff?
+
+
+
+"""
