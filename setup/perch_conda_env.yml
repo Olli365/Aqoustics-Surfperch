@@ -8,4 +8,4 @@ dependencies:
   - python=3.10
   - pip
   - pip:
-      - tensorflow[and-cuda]
+      - tensorflow==2.15[and-cuda] 

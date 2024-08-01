@@ -1,0 +1,128 @@
+Guide to setting up the environments in this repository so they work with gpu
+on linux and tensorflow.
+
+1. Use the yml file to create a conda env that installs the latest version of
+TF (2.17.0 at time of writing) and installs the right cudatoolkit and cudnn 
+libraries with this automatically.
+`conda env create -f perch_conda_env.yml`
+
+2. Activate the env
+conda activate perch_conda_env
+
+3. Install curl if not already (I am using a brand new system)
+sudo apt-get install curl
+
+4. Globally install poetry, libsdnfile1 and ffmpef which are required by Perch
+curl -sSL https://install.python-poetry.org | python3 -
+sudo apt-get install libsndfile1 ffmpeg
+
+
+6. Add path to bashrc, I forget if this is essential, but leaving for now incase.
+nano ~/.bashrc
+export PATH="$HOME/.local/bin:$PATH"
+exit bashrc
+source ~/.bashrc
+
+7. Reactivate conda env
+conda activate perch_conda_env
+
+5. Now install the poetry env using the .tml file in the surfperch dir
+cd surfperch
+poetry config virtualenvs.in-project true
+poetry env use $(which python)
+
+# Install inference-only dependencies specified in the poetry configs
+poetry install
+
+BEN got to here. Poetry trying to install. Think it worked
+Though it did say in red:
+Cannot install prompt-toolkit.
+
+Next check is whether it can actually find my gpu.
+
+Omg it worked on the tf_test.py!
+
+Still, I don't trust anything.
+
+Will have to try the notebooks and embed.py. Feel like they could still cause issues.
+
+Todo tomorrow:
+github all this.
+
+Try embed.
+
+From here on:
+cd /home/bwilliams/ucl_projects/marrs_acoustics/code/surfperch
+poetry shell
+
+
+###################
+DO NOT CHANGE ABOVE NEW NOTES BELOW
+
+Guide to setting up the environments in this repository so they work with gpu
+on linux and tensorflow.
+
+1. Use the yml file to create a conda env that installs the latest version of
+TF (2.17.0 at time of writing) and installs the right cudatoolkit and cudnn 
+libraries with this automatically.
+cd /surfperch/setup
+`conda env create -f perch_conda_env.yml`
+
+2. Activate the env and test the gpu works. It should show TF v2.17.0 and 'Num 
+GPUs Available: 1'.
+conda activate perch_conda_env
+python tf_test.py
+
+3. Install curl if not already (I am using a brand new system)
+sudo apt-get install curl
+
+4. Globally install poetry, libsdnfile1 and ffmpef which are required by Perch
+curl -sSL https://install.python-poetry.org | python3 -
+sudo apt-get install libsndfile1 ffmpeg
+
+
+6. Add path to bashrc, I forget if this is essential, but leaving for now incase.
+nano ~/.bashrc
+export PATH="$HOME/.local/bin:$PATH"
+exit bashrc
+source ~/.bashrc
+
+7. Reactivate conda env
+conda activate perch_conda_env
+
+5. Now install the poetry env using the .tml file in the surfperch dir. Note this 
+has one modification to the standard Perch repo in the .tml file to set the TF 
+version to 2.17.0 which is what was installed for our conda env.
+
+5a. 
+cd surfperch
+poetry config virtualenvs.in-project true
+poetry env use $(which python)
+
+
+# Install inference-only dependencies specified in the poetry configs
+poetry lock --no-update
+poetry install
+
+BEN got to here. Poetry trying to install. Think it worked
+Though it did say in red:
+Cannot install prompt-toolkit.
+
+Next check is whether it can actually find my gpu.
+
+Omg it worked on the tf_test.py!
+
+Still, I don't trust anything.
+
+Will have to try the notebooks and embed.py. Feel like they could still cause issues.
+
+Todo tomorrow:
+github all this.
+
+Try embed.
+
+From here on:
+cd /home/bwilliams/ucl_projects/marrs_acoustics/code/surfperch
+poetry shell
+
+
