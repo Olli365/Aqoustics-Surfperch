@@ -1,0 +1,11 @@
+#install with: conda env create -f perch_conda_env.yml
+
+name: perch_conda_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - tensorflow[and-cuda]
