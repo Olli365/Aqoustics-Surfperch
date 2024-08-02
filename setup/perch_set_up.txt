@@ -68,6 +68,40 @@ libraries with this automatically.
 cd /surfperch/setup
 `conda env create -f perch_conda_env.yml`
 
+BEN AM HERE ^
+Now trying ot make a conda env with tf v.2.15.0 in the hope that will mean perch works, because in the toml file it  has this version.
+If i tried installing the latest version with tensorflow[and-cuda] it would isntall 2.17. If i tried editing the .tml file to be 2.17, 
+tf-io then gave issues.
+There is a note in the tml that says tf-io and tf must match and to see this table:https://github.com/tensorflow/io#tensorflow-version-compatibility
+but the table doesnt include tf 2.17!
+Confusingly though, this is only under the jax bit, but i though i isntalled the lightwiegfht with this jax stuff, so why is it complaining.
+Things to try:
+1- wait to see if this conda env with tensorflow[and-cuda]==2.15.0.post1 installs and can find the gpu. This is from this blog psot:
+https://blog.tensorflow.org/2023/12/tensorflow-215-update-hot-fix-linux-installation-issue.html
+2- try using the latest tf version again (and maybe check if i can fix it with ensorflow[and-cuda]==2.17)
+
+Currently got 1 to install correctly. But then when i installed poetry it still isntalled tf 2.16, wtf.
+THE ISSUE = the poetry install command is in fact installing all the jx bs, so change poetry install command to not?
+to do:
+- try fixign the install command
+- what if just move all the tml stuff into the conda env creation and skip poetry?
+
+
+latest
+- trid installing all from a conda env. found loads of conflicts but removed:
+jax, flax, clu, chex, optax, scann
+Which I don't think are needed for lightweight inference? Worried about scann though
+- Tested gpu and tf which worked
+- now need to see if embedding will work!
+
+
+
+
+
+
+
+
+
 2. Activate the env and test the gpu works. It should show TF v2.17.0 and 'Num 
 GPUs Available: 1'.
 conda activate perch_conda_env
@@ -95,7 +129,6 @@ has one modification to the standard Perch repo in the .tml file to set the TF
 version to 2.17.0 which is what was installed for our conda env.
 
 5a. 
-cd surfperch
 poetry config virtualenvs.in-project true
 poetry env use $(which python)
 
