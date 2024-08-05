@@ -69,9 +69,6 @@ config.embed_fn_config.file_id_depth = 1
 
 
 
-
-
-
 #@title Set up. { vertical-output: true }
 
 # Set up the embedding function, including loading models.
@@ -100,9 +97,6 @@ print('Setup complete!')
 
 
 
-
-
-
 #@title Run embedding. { vertical-output: true }
 
 # Uses multiple threads to load audio before embedding.
@@ -115,30 +109,40 @@ succ, fail = 0, 0
 existing_embedding_ids = embed_lib.get_existing_source_ids(
     output_dir, 'embeddings-*')
 
-source_infos = embed_lib.get_new_source_infos(
+
+
+
+
+new_source_infos = embed_lib.get_new_source_infos(
     source_infos, existing_embedding_ids, config.embed_fn_config.file_id_depth)
 
-print(f'Processing {len(source_infos)} new source infos.')
+print(f'Found {len(existing_embedding_ids)} existing embedding ids. \n'
+      f'Processing {len(new_source_infos)} new source infos. ')
 
-audio_iterator = audio_utils.multi_load_audio_window(
-    filepaths=[s.filepath for s in source_infos],
-    offsets=[s.shard_num * s.shard_len_s for s in source_infos],
-    sample_rate=config.embed_fn_config.model_config.sample_rate,
-    window_size_s=config.get('shard_len_s', -1.0),
-)
-with tf_examples.EmbeddingsTFRecordMultiWriter(
-    output_dir=output_dir, num_files=config.get('tf_record_shards', 1)) as file_writer:
-  for source_info, audio in tqdm.tqdm(
-      zip(source_infos, audio_iterator), total=len(source_infos)):
-    file_id = source_info.file_id(config.embed_fn_config.file_id_depth)
-    offset_s = source_info.shard_num * source_info.shard_len_s
-    example = embed_fn.audio_to_example(file_id, offset_s, audio)
-    if example is None:
-      fail += 1
-      continue
-    file_writer.write(example.SerializeToString())
-    succ += 1
-  file_writer.flush()
+try:
+  audio_loader = lambda fp, offset: audio_utils.load_audio_window(
+      fp, offset, sample_rate=config.embed_fn_config.model_config.sample_rate,
+      window_size_s=config.get('shard_len_s', -1.0))
+  audio_iterator = audio_utils.multi_load_audio_window(
+      filepaths=[s.filepath for s in new_source_infos],
+      offsets=[s.shard_num * s.shard_len_s for s in new_source_infos],
+      audio_loader=audio_loader,
+  )
+  with tf_examples.EmbeddingsTFRecordMultiWriter(
+      output_dir=output_dir, num_files=config.get('tf_record_shards', 1)) as file_writer:
+    for source_info, audio in tqdm.tqdm(
+        zip(new_source_infos, audio_iterator), total=len(new_source_infos)):
+      file_id = source_info.file_id(config.embed_fn_config.file_id_depth)
+      offset_s = source_info.shard_num * source_info.shard_len_s
+      example = embed_fn.audio_to_example(file_id, offset_s, audio)
+      if example is None:
+        fail += 1
+        continue
+      file_writer.write(example.SerializeToString())
+      succ += 1
+    file_writer.flush()
+finally:
+  del(audio_iterator)
 print(f'\n\nSuccessfully processed {succ} source_infos, failed {fail} times.')
 
 fns = [fn for fn in output_dir.glob('embeddings-*')]
@@ -147,5 +151,5 @@ parser = tf_examples.get_example_parser()
 ds = ds.map(parser)
 for ex in ds.as_numpy_iterator():
   print(ex['filename'])
-  print(ex['embedding'].shape)
+  print(ex['embedding'].shape, flush=True)
   break

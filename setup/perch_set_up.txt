@@ -135,7 +135,9 @@ TRYING: solution here?: https://github.com/tensorflow/tensorflow/issues/63362#is
     - check i can embed
     - make permanant edit to tml, upload to github
     - write a basic readme with the above instructions
-    - save blog link + command, add to try things
+    - - save blog link + command, add to try things
+    -- interestingly poetry install modifies the conda env and adds the chipr package and other things? unexpected but useful
+    -- also note, the conda yaml installs tf 2.16.1. After poetry install, for some reason this upgrades to tf2.16.2.
     - reproduce in a new env
     - find out how ot get notebooks working
     - clean up yml files

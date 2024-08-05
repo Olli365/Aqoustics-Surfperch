@@ -1,6 +1,6 @@
 #install with: conda env create -f perch_conda_env.yml
 
-name: perch_conda_env
+name: perch_conda_env_ again
 channels:
   - defaults
   - conda-forge
@@ -8,5 +8,6 @@ dependencies:
   - python=3.10
   - pip
   - pip:
+   # Install TF with cuda. Poetry install will then upgrade this to v2.16.2.
       - tensorflow[and-cuda]==2.16.1
 
