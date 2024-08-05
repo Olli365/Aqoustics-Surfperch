@@ -1,84 +1,80 @@
-# Perch
 
-![CI](https://github.com/google-research/perch/actions/workflows/ci.yml/badge.svg)
+## Mars Global Acoustic Study Set Up Notes
 
-A bioacoustics research project.
+Installing Perch and getting this to work on a GPU is tricky. This guide contains notes on how to set up Perch to use a GPU on Linux. See the official [Perc repository](https://github.com/google-research/perch/tree/main) for further install notes.
 
-## Installation
+This repository is a modified clone taken from the official Perch repository at commit [12bee2980e81c6a95a5e48214000d1f335274ea1](https://github.com/google-research/perch/commit/12bee2980e81c6a95a5e48214000d1f335274ea1) which was on 1/8/2024.
 
-We support installation on a generic Linux workstation.
-A GPU is recommended, especially when working with large datasets.
-The recipe below is the same used by our continuous integration testing.
+The system used for this guide was a Dell XPS 15 with an Nvidia RTX 4060 GPU, running Ubuntu 24.04. 
 
-Some users have successfully used our repository with the Windows Linux
-Subsystem, or with Docker in a cloud-based virtual machine. Anecdotally,
-installation on OS X is difficult.
+#### Clone the Repository
 
-You might need the following dependencies.
+Clone this repository from GitHub.
 
 ```bash
-# Install Poetry for package management
-curl -sSL https://install.python-poetry.org | python3 -
-
-# Install dependencies for librosa
-sudo apt-get install libsndfile1 ffmpeg
-
-# Install all dependencies specified in the poetry configs
-poetry install  --with jaxtrain
+git clone https://github.com/BenUCL/MARRS_global_acoustic_study.git
 ```
 
-Running `poetry install` installs all Perch dependencies into a new virtual environment, in which you can run the Perch code base. To run the tests, use:
+#### Step 1: Create the Conda Environment
+
+Use the `perch_conda_env.yml` file to create the Conda environment. This will install TensorFlow 2.15.0 alongside the correct CUDA libraries.
 
 ```bash
-poetry run python -m unittest discover -s chirp/tests -p "*test.py"
-poetry run python -m unittest discover -s chirp/inference/tests -p "*test.py"
+cd setup
+conda env create -f perch_conda_env.yml
 ```
 
-### Lightweight Inference
+#### Step 2: Verify TensorFlow Installation and GPU Detection
 
-Note that if you only need the python notebooks for use with pre-trained models,
-you can install with lighter dependencies:
+Activate the Conda environment and run a test script to check if TensorFlow is installed correctly and if the GPU is recognized. The script will print out the number of GPUs found and the TensorFlow version. The useful part of the output is likely buried amongst an other wise busy terminal output, so look through caefully for `TensorFlow version` and `Num GPUs Available`.
 
+```bash
+conda activate perch_conda_env
+python tf_test.py
 ```
-# Install inference-only dependencies specified in the poetry configs
+
+If no GPU is found, the following notes should help. These are taken from advice for getting TF v2.16 working on a GPU [here](https://github.com/tensorflow/tensorflow/issues/63362#issuecomment-2016019354):
+
+```bash
+export NVIDIA_DIR=$(dirname $(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)")))
+export LD_LIBRARY_PATH=$(echo ${NVIDIA_DIR}/*/lib/ | sed -r 's/\s+/:/g')${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+```
+Note, the above link suggests this adjustment to the LD_LIBRARY_PATH will not persist in new terminal sessions and provides instructions to ensure this. However, this has not been the case for me. 
+
+Rerun the test script to ensure the GPU is now recognized by TensorFlow:
+
+```bash
+python tf_test.py
+```
+
+#### Step 3: Install the Poetry Environment
+
+Next, install the Poetry environment for Perch. This will add additional packages required by Perch to the Conda environment. Note, I did not expect this behaviour but it proves to be useful as it means scripts can now be run from the conda environment, not a separate poetry environment. Note that TensorFlow has been removed from the `pyproject.toml` file used by Perch.
+
+```bash
+cd ..
 poetry install
 ```
 
-And check that the inference tests succeed:
-```bash
-poetry run python -m unittest discover -s chirp/inference/tests -p "*test.py"
-```
-
-## Using a container
-
-Alternatively, you can install and run this project using a container via Docker. To build a container using the tag `perch`, run:
+If you receive a message indicating that the lock file has been edited and needs updating, run the following command and then retry the Poetry installation:
 
 ```bash
-git clone https://github.com/google-research/perch
-cd perch
-docker build . --tag perch
+poetry lock
+poetry install
 ```
 
-After building the container, to run the unit tests, use:
+#### Step 4: Verify Installation
+
+The Conda environment should now have the `chirp` package and other dependencies installed. To verify the installation, check the version of `chirp`:
 
 ```bash
-docker run --rm -t perch python -m unittest discover -s chirp/tests -p "*test.py"
+python -c "import chirp; print(chirp.__version__)"
 ```
 
-## BIRB benchmark
-
-### Data preparation
-To build the BIRB evaluation data, after [installing](#installation) the `chirp` package, run the following command from the repository's root directory:
+Finally, verify the TensorFlow version and GPU detection again. Note that TensorFlow may have updated to version 2.16.2:
 
 ```bash
-poetry run tfds build -i chirp.data.bird_taxonomy,chirp.data.soundscapes \
-    soundscapes/{ssw,hawaii,coffee_farms,sierras_kahl,high_sierras,peru}_full_length \
-    bird_taxonomy/{downstream_full_length,class_representatives_slice_peaked}
+python tf_test.py
 ```
 
-The process should take 36 to 48 hours to complete and use around 256 GiB of disk space.
-
-### Benchmark README
-For details on setting up the benchmark and evaluation protocol, please refer to this [brief readme](https://docs.google.com/document/d/1RasVkxIKKlUToFlJ8gZxaHqIE-mMy9G1MZwfK98Gb-I) with instructions. The evaluation codebase is in [perch/chirp/eval](https://github.com/google-research/perch/tree/main/chirp/eval).
-
-*This is not an officially supported Google product.*
+If the test script shows that 1 or more GPUs are found, the setup is successful and GPU support is enabled.
