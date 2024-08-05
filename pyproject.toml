@@ -18,7 +18,7 @@ flax = "^0.8.1"
 jax = "^0.4.16"
 ml-collections = "^0.1.1"
 optax = ">=0.1.7"
-tensorflow = "^2.15"
+#tensorflow = "^2.15"
 pandas = {version = "^2.1.1", extras=["gcp"]}
 etils = {version = "^1.5.0", extras = ["epath"]}
 SPARQLWrapper = "^2.0.0"
@@ -41,7 +41,7 @@ optional = true
 # TF-io is used for sample rate conversion only in data ingestion pipelines.
 # Note that tensorflow and tensorflow-io versions must be synchronized.
 # See: https://github.com/tensorflow/io#tensorflow-version-compatibility
-tensorflow = "^2.16"
+#tensorflow = "^2.16"
 tensorflow-io = "^0.37"
 tensorflow-datasets = {version = "^4.9.3", extras = ["dev"]}
 # AudioMAE / ViT.

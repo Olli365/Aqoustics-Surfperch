@@ -85,14 +85,65 @@ THE ISSUE = the poetry install command is in fact installing all the jx bs, so c
 to do:
 - try fixign the install command
 - what if just move all the tml stuff into the conda env creation and skip poetry?
+- WRONG, it is not isntalling all the jax bs i dont think
 
 
 latest
-- trid installing all from a conda env. found loads of conflicts but removed:
+- tried installing all from a conda env. found loads of conflicts but removed:
 jax, flax, clu, chex, optax, scann
 Which I don't think are needed for lightweight inference? Worried about scann though
 - Tested gpu and tf which worked
 - now need to see if embedding will work!
+- side note, if this doesnt work and im back to installing tf and cuda separately, i now know these versions install and work with 
+tfv2.15 as I did conda list and it showed all the packages
+cudatoolkit               11.8.0               h6a678d5_0  
+cudnn                     8.9.2.26               cuda11_0 
+- nope, couldnt run any scripts as turned ou it does still need jax and those other libsdnfile1
+
+Where im up to:
+- cant get conda yml to install with everything as with tf2.16 it cant find gpu and with tf.2.15 it wont install with jax etc
+- cant just make a conda env with tf 2.15 then run poetry shell as poetry overwrite the tf version
+- solution: if i can get tf 2.16 conda env to work then it may find my gpu after poetry install?
+OR: if i can global install the right cuda and cudnn, though i dont like this because its global and anyway it didnt seem to work with ubuntu 22.4
+OR: install perch at head in colab. print versions of everything installed in that env
+TRYING: solution here?: https://github.com/tensorflow/tensorflow/issues/63362#issuecomment-2016019354
+    One suggestion it might work with python 3.11. So am first checking I can in fact install with tf 2.16.0 cause think i got this working
+    earlier. Then will try change the yml to python 3.11 and try again. If not follow that link for more.
+    1: installing with the standard perch stuff but in cona with python 3.10 and tf 2.16.1[and-cuda] = installs, tf_test = works??
+    But, the embed.py doesnt run as no etils. I think because it got it form conda forge not pip?
+    I then couldnbt get etils to install from the yml, but did run this which worked:
+    conda install -c conda-forge etils
+    However, now getting an error from etils that:
+    ModuleNotFoundError: No module named 'importlib_resources'
+    trying to nuke env then reintall etils of earlier version.
+    ok now did 
+    pip install importlib_resources
+    and now:
+    pip install ml_collections
+    pip install tqdm
+    pip install apache_beam
+    audioread
+    FOUND - I was installing the wrony yml doh, so the notes above are kinda irrelevant
+    2: Back to checking if tf 2.16.1 installs ok, as poetry tml will like this and then can try the forum stuff to get 2.16.1 working on gpu
+    - Yes env installs with tf 2.16.1 but no gpu found
+    - Then ran the commands which got tf test working:
+    export NVIDIA_DIR=$(dirname $(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)")))
+    export LD_LIBRARY_PATH=$(echo ${NVIDIA_DIR}/*/lib/ | sed -r 's/\s+/:/g')${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    - Then tried poetry install after i'd removed tf, but it didnt work. now running lock which might take ages. If this fails, I could just
+    keep tf in the tml file but maybe set the exact version to 2.16.1?
+    think it worked!! to do:
+    - check i can embed
+    - make permanant edit to tml, upload to github
+    - write a basic readme with the above instructions
+    - save blog link + command, add to try things
+    - reproduce in a new env
+    - find out how ot get notebooks working
+    - clean up yml files
+
+  
+    - now want to try 2.15.1 again but remove tf rom the poetry tml and perhaps change the io or whatever it is to match 2.15 by using that table?
+
+
 
 
 
