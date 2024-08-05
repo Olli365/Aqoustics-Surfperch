@@ -1,7 +1,7 @@
 
 ## Mars Global Acoustic Study Set Up Notes
 
-Installing Perch and getting this to work on a GPU is tricky. This guide contains notes on how to set up Perch to use a GPU on Linux. See the official [Perc repository](https://github.com/google-research/perch/tree/main) for further install notes.
+Installing Perch and getting this to work on a GPU is tricky. This guide contains notes on how to set up Perch to use a GPU on Linux. See the official [Perc repository](https://github.com/google-research/perch/tree/main) for more general install notes.
 
 This repository is a modified clone taken from the official Perch repository at commit [12bee2980e81c6a95a5e48214000d1f335274ea1](https://github.com/google-research/perch/commit/12bee2980e81c6a95a5e48214000d1f335274ea1) which was on 1/8/2024.
 
