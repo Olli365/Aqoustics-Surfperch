@@ -29,8 +29,8 @@ config.embed_fn_config.model_config = config_dict.ConfigDict()
 # Pick the input and output targets.
 # source_file_patterns should contain a list of globs of audio files, like:
 # ['/home/me/*.wav','/home/me/*.WAV', '/home/me/other/*.flac']
-config.source_file_patterns = [os.path.join(base_dir,'marrs_acoustics/data/test_data/*.WAV')] #@param
-config.output_dir = os.path.join(base_dir,'marrs_acoustics/data/test_data/output_dir_test/embeddings')  #@param
+config.source_file_patterns = [os.path.join(base_dir,'marrs_acoustics/data/test_data/*.WAV')] 
+config.output_dir = os.path.join(base_dir,'marrs_acoustics/data/output_dir_test/embeddings')  
 
 # For Perch, the directory containing the model.
 # Alternatively, set the perch_tfhub_model_version, and the model will load
@@ -69,7 +69,6 @@ config.embed_fn_config.file_id_depth = 1
 
 
 
-#@title Set up. { vertical-output: true }
 
 # Set up the embedding function, including loading models.
 embed_fn = embed_lib.EmbedFn(**config.embed_fn_config)
@@ -97,7 +96,6 @@ print('Setup complete!')
 
 
 
-#@title Run embedding. { vertical-output: true }
 
 # Uses multiple threads to load audio before embedding.
 # This tends to be faster, but can fail if any audio files are corrupt.
@@ -108,10 +106,6 @@ succ, fail = 0, 0
 
 existing_embedding_ids = embed_lib.get_existing_source_ids(
     output_dir, 'embeddings-*')
-
-
-
-
 
 new_source_infos = embed_lib.get_new_source_infos(
     source_infos, existing_embedding_ids, config.embed_fn_config.file_id_depth)
