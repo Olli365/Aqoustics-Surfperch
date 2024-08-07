@@ -29,7 +29,7 @@ config.embed_fn_config.model_config = config_dict.ConfigDict()
 # Pick the input and output targets.
 # source_file_patterns should contain a list of globs of audio files, like:
 # ['/home/me/*.wav','/home/me/*.WAV', '/home/me/other/*.flac']
-config.source_file_patterns = [os.path.join(base_dir,'marrs_acoustics/data/test_data/*.WAV')] 
+config.source_file_patterns = [os.path.join(base_dir,'marrs_acoustics/data/output_dir_aus/*.WAV')] 
 config.output_dir = os.path.join(base_dir,'marrs_acoustics/data/output_dir_test/embeddings')  
 
 # For Perch, the directory containing the model.
