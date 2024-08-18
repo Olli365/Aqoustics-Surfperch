@@ -1,3 +1,4 @@
+FOR LINUX ENV ONLY
 #### Step 1: Create the Conda Environment
 
 Use the `perch_conda_env.yml` file to create the Conda environment. This will install TensorFlow 2.15.0 alongside the correct CUDA libraries.
