@@ -1,20 +1,3 @@
-
-## Mars Global Acoustic Study Set Up Notes
-
-Installing Perch and getting this to work on a GPU is tricky. This guide contains notes on how to set up Perch to use a GPU on Linux. See the official [Perc repository](https://github.com/google-research/perch/tree/main) for more general install notes.
-
-This repository is a modified clone taken from the official Perch repository at commit [12bee2980e81c6a95a5e48214000d1f335274ea1](https://github.com/google-research/perch/commit/12bee2980e81c6a95a5e48214000d1f335274ea1) which was on 1/8/2024.
-
-The system used for this guide was a Dell XPS 15 with an Nvidia RTX 4060 GPU, running Ubuntu 24.04. 
-
-#### Clone the Repository
-
-Clone this repository from GitHub.
-
-```bash
-git clone https://github.com/BenUCL/MARRS_global_acoustic_study.git
-```
-
 #### Step 1: Create the Conda Environment
 
 Use the `perch_conda_env.yml` file to create the Conda environment. This will install TensorFlow 2.15.0 alongside the correct CUDA libraries.
