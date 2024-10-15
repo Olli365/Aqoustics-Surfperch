@@ -64,7 +64,7 @@ config.embed_fn_config.write_raw_audio = False
 
 # Number of parent directories to include in the filename.
 config.embed_fn_config.file_id_depth = 1
-config.tf_record_shards = 1
+config.tf_record_shards = 100
 
 
 
