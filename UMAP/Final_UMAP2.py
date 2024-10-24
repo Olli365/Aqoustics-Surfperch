@@ -18,9 +18,6 @@ random_seed = 42
 tfrecord_dir  = '/mnt/d/Aqoustics/BEN/Australia_Embeddings/'
 
 
-# Path where we will save cluster results
-cluster_results_path = '/mnt/d/Aqoustics/BEN/Austraila_Embeddings/cluster_results.csv'
-
 
 def list_files_in_folder(folder_path):
     """
@@ -215,7 +212,7 @@ from sklearn.mixture import GaussianMixture
 from matplotlib.patches import Ellipse
 
 # Step 1: Fit GMM on the 2D UMAP embeddings
-n_components = 2  # Set the number of clusters (you can adjust this based on your data)
+n_components = 100  # Set the number of clusters (you can adjust this based on your data)
 gmm = GaussianMixture(n_components=n_components, covariance_type='full', random_state=random_seed)
 gmm.fit(reduced_features_2d)
 
@@ -254,136 +251,22 @@ plt.scatter(reduced_features_2d[:, 0], reduced_features_2d[:, 1], c=gmm_labels, 
 w_factor = 0.2 / gmm.weights_.max()  # Scale the ellipses by their weights
 for i, (pos, covar, w) in enumerate(zip(gmm.means_, gmm.covariances_, gmm.weights_)):
     # Add this print statement before calling draw_ellipse
-    print("Shape of covariance matrices:", [cov.shape for cov in gmm.covariances_])
     draw_ellipse(pos, covar, alpha=w * w_factor, color='black', cluster_num=i)  # Add cluster number
 
 plt.title('UMAP Projection of Audio Features with GMM Clustering and Cluster Labels')
 plt.colorbar(label='GMM Cluster')
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap1+GMM.png', dpi=300)  # Adjust dpi for quality if needed
-plt.close()
-print("Saved umap1+GMM.png")
-
-features_metadata_df['cluster'] = gmm_labels
-
-
-def filter_by_cluster(df, cluster_numbers):
-    """
-    Remove rows from the DataFrame where the 'cluster' column matches any of the values in cluster_numbers list.
-    
-    Parameters:
-    df (pd.DataFrame): The input DataFrame.
-    cluster_numbers (list): A list of cluster values to remove from the DataFrame.
-    
-    Returns:
-    pd.DataFrame: A new DataFrame with the specified clusters removed.
-    """
-    # Remove rows where the 'cluster' value is in the cluster_numbers list
-    filtered_df = df[~df['cluster'].isin(cluster_numbers)]
-    
-    return filtered_df
-
-
-clusters_to_remove = [0]
-
-# Apply the filter function
-filtered_df = filter_by_cluster(features_metadata_df, clusters_to_remove)
-
-n_neighbors = 10
-min_dist = 0.1
-n = 64
-
-umap_reducer2 = umap.UMAP(n_components=n, random_state=random_seed, n_neighbors=n_neighbors, min_dist=min_dist)
-umap_reducer2.fit(sampled_data.iloc[:, 2:])
-reduced_features = umap_reducer2.transform(filtered_df.iloc[:, 2:-1])
-print("reduced to 128 2")
-umap_reducer_2d2 = umap.UMAP(n_components=2, random_state=random_seed, n_neighbors=n_neighbors, min_dist=min_dist)
-reduced_features_2d2 = umap_reducer_2d2.fit_transform(reduced_features)
-print("reduced to 2 2")
-
-
-
-# Mapping from single letters to words for descriptive labels
-#class_mapping = {'H': 'Healthy', 'D': 'Degraded', 'R': 'Restored', 'N': 'Newly-Restored'}
-#color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue', 'Newly-Restored' : 'yellow'}
-class_mapping = {'Healthy': 'Healthy', 'Degraded': 'Degraded', 'Restored': 'Restored'}
-color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue'}
-
-
-# Set up the plot
-plt.figure(figsize=(10, 10))
-
-# Plot each class with its own color and label using the mapping
-for class_type, label in class_mapping.items():
-    # Select only data rows with the current class_type, mapping them to descriptive labels on-the-fly
-    indices = filtered_df['class_type'] == class_type
-    plt.scatter(reduced_features_2d2[indices, 0], reduced_features_2d2[indices, 1], label=label,
-                color=color_mapping[label], alpha=0.5)  # Assigning specific colors
-
-plt.title('UMAP Projection of Audio Features')
-plt.legend(title='Class Label')  # Adds a legend with a title
 plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap2.png', dpi=300)  # Adjust dpi for quality if needed
 plt.close()
 print("Saved umap2.png")
 
+features_metadata_df['cluster'] = gmm_labels
 
-from sklearn.mixture import GaussianMixture
-from matplotlib.patches import Ellipse
-
-# Step 1: Fit GMM on the 2D UMAP embeddings
-n_components = 100  # Set the number of clusters (you can adjust this based on your data)
-gmm = GaussianMixture(n_components=n_components, covariance_type='full', random_state=random_seed)
-gmm.fit(reduced_features_2d2)
-
-# Step 2: Predict the cluster labels for each point
-gmm_labels = gmm.predict(reduced_features_2d2)
-
-# Step 3: Function to draw ellipses representing GMM components
-def draw_ellipse(position, covariance, ax=None, cluster_num=None, **kwargs):
-    """Draw an ellipse with a given position and covariance and label it with the cluster number."""
-    ax = ax or plt.gca()
-
-    # Convert covariance to principal axes
-    if covariance.shape == (2, 2):
-        U, s, Vt = np.linalg.svd(covariance)
-        angle = np.degrees(np.arctan2(U[1, 0], U[0, 0]))
-        width, height = 2 * np.sqrt(s)
-    else:
-        angle = 0
-        width, height = 2 * np.sqrt(covariance)
-
-    # Draw the Ellipse with angle as a keyword argument
-    for nsig in range(1, 4):  # Draw ellipses at 1, 2, and 3 standard deviations
-        ax.add_patch(Ellipse(position, nsig * width, nsig * height, angle=angle, **kwargs))
-    
-    # Add the cluster number at the center of the ellipse
-    if cluster_num is not None:
-        ax.text(position[0], position[1], str(cluster_num), color='black', fontsize=12, ha='center', va='center')
-
-# Step 4: Plot UMAP embeddings with clusters from GMM
-plt.figure(figsize=(10, 10))
-
-# Plot UMAP embeddings and color them by the GMM cluster labels
-plt.scatter(reduced_features_2d2[:, 0], reduced_features_2d2[:, 1], c=gmm_labels, cmap='viridis', s=50, alpha=0.7)
-
-# Step 5: Plot GMM ellipses with cluster numbers
-w_factor = 0.2 / gmm.weights_.max()  # Scale the ellipses by their weights
-for i, (pos, covar, w) in enumerate(zip(gmm.means_, gmm.covariances_, gmm.weights_)):
-    draw_ellipse(pos, covar, alpha=w * w_factor, color='black', cluster_num=i)  # Add cluster number
-
-plt.title('UMAP Projection of Audio Features with GMM Clustering and Cluster Labels')
-plt.colorbar(label='GMM Cluster')
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap2+GMM.png', dpi=300)  # Adjust dpi for quality if needed
-plt.close()
-print("Saved umap2+GMM.png")
-
-filtered_df.loc[:, 'cluster'] = gmm_labels
 
 
 import os
 import shutil
 import pandas as pd
 import random
-
 
 def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n_samples):
     
@@ -407,7 +290,13 @@ def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n
         # Iterate through the selected files and copy them
         for _, row in selected_files.iterrows():
             source_file = os.path.join(source_base_folder, row['filename'])
-            destination_file = os.path.join(cluster_folder, os.path.basename(row['filename']))
+            
+            # Get the folder name the file is in
+            folder_name = os.path.basename(os.path.dirname(source_file))
+            
+            # Create a new file name with the folder name as a prefix
+            new_file_name = f"{folder_name}_{os.path.basename(row['filename'])}"
+            destination_file = os.path.join(cluster_folder, new_file_name)
             
             # Copy the file to the appropriate cluster folder
             shutil.copy2(source_file, destination_file)
@@ -418,4 +307,4 @@ def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n
 source_base_folder = "/mnt/d/Aqoustics/BEN/Australia_ROI/"
 destination_base_folder = "/mnt/d/Aqoustics/BEN/Australia_Clusters/"
 n_samples = 100
-organize_clips_by_cluster(filtered_df, source_base_folder, destination_base_folder,n_samples)
+organize_clips_by_cluster(features_metadata_df, source_base_folder, destination_base_folder,n_samples)
