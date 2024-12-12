@@ -15,11 +15,10 @@ from chirp.inference import tf_examples
 random_seed = 42
 
 # Path to the directory containing the TFRecord files
-tfrecord_dir  = '/mnt/d/Aqoustics/BEN/Australia_Embeddings/'
+tfrecord_dir = '/mnt/d/Aqoustics/BEN/Indonesia/Final_Indonesia_Embeddings/'
 
 
 # Path where we will save cluster results
-cluster_results_path = '/mnt/d/Aqoustics/BEN/Austraila_Embeddings/cluster_results.csv'
 
 
 def list_files_in_folder(folder_path):
@@ -86,7 +85,9 @@ def read_embeddings_to_dataframe(tfrecord_files):
     
     Returns:
     pd.DataFrame: DataFrame containing the embeddings and filenames.
+    
     """
+    
     # Initialize empty lists to store filenames and embeddings
     filenames = []
     embeddings = []
@@ -95,6 +96,9 @@ def read_embeddings_to_dataframe(tfrecord_files):
     for tfrecord_file in tfrecord_files:
         # Create a TFRecordDataset from the current TFRecord file
         ds = tf.data.TFRecordDataset(tfrecord_file)
+        print(f"Embeddings shape: {len(embeddings)}")
+        print(f"Number of filenames: {len(filenames)}")
+
 
         # Use the example parser from tf_examples to parse the embeddings
         parser = tf_examples.get_example_parser()
@@ -120,7 +124,7 @@ def read_embeddings_to_dataframe(tfrecord_files):
 
 
 # Path to the directory containing the TFRecord files
-tfrecord_dir = '/mnt/d/Aqoustics/BEN/Australia_Embeddings/'
+tfrecord_dir = '/mnt/d/Aqoustics/BEN/Indonesia/Final_Indonesia_Embeddings/'
 
 # List the TFRecord files in the directory
 file_list = list_files_in_folder(tfrecord_dir)
@@ -140,10 +144,10 @@ print(f"Embeddings DataFrame created with shape: {embeddings_df.shape}")
 
 # Example: Saving the features metadata after processing in batches
 features_df = embeddings_df
-"""
+
 def extract_metadata_from_filename(file):
     # Split the filename using 'clip_ind_' as the delimiter
-    parts = file.split('_')
+    parts = file.split('New_Indonesia_ROI/clip_ind_')
     
     # Extract the first letter after 'clip_ind_' to determine the class_type
     class_type = parts[1][0] if len(parts) > 1 else None
@@ -152,13 +156,13 @@ def extract_metadata_from_filename(file):
 """
 def extract_metadata_from_filename(file):
     # Split the filename using '_' as the delimiter
-    parts = file.split('_')
+    parts = file.split('New_Indonesia_ROI/clip_ind_')
     
     # Extract the first part (before the first '_') and get its first letter(s)
     first_part = parts[0] if len(parts) > 0 else None
     
     return first_part
-
+"""
 
 # Applying the function to each filename in the DataFrame
 features_df['class_type'] = features_df['filename'].apply(extract_metadata_from_filename)
@@ -170,6 +174,7 @@ column_order = ['filename', 'class_type'] + \
 
 # Reorder the DataFrame
 features_metadata_df = features_df[column_order]
+print(features_metadata_df.head())
 
 
 
@@ -186,8 +191,8 @@ umap_reducer_2d = umap.UMAP(n_components=2, random_state=random_seed, n_neighbor
 reduced_features_2d = umap_reducer_2d.fit_transform(reduced_features_128)
 print("reduced to 2")
 # Mapping from single letters to words for descriptive labels
-#class_mapping = {'H': 'Healthy', 'D': 'Degraded', 'R': 'Restored', 'N': 'Newly-Restored'}]class_mapping = {'H': 'Healthy', 'D': 'Degraded', 'R': 'Restored', 'N': 'Newly-Restored'}
-class_mapping = {'Healthy': 'Healthy', 'Degraded': 'Degraded', 'Restored': 'Restored'}
+class_mapping = {'H': 'Healthy', 'D': 'Degraded', 'R': 'Restored', 'N': 'Newly-Restored'}
+#class_mapping = {'Healthy': 'Healthy', 'Degraded': 'Degraded', 'Restored': 'Restored'}
 color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue', 'Newly-Restored': 'yellow'}
 
 # Set up the plot
@@ -200,11 +205,10 @@ for class_type, label in class_mapping.items():
     plt.scatter(reduced_features_2d[indices, 0], reduced_features_2d[indices, 1], label=label,
                 color=color_mapping[label], alpha=0.5)  # Assigning specific colors
 
-plt.title('UMAP Projection of Audio Features')
 plt.legend(title='Class Label')  # Adds a legend with a title
 
 # Save the plot as an image file in the specified directory
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap1.png', dpi=300)  # Adjust dpi for quality if needed
+plt.savefig('/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_UMAP/umap1.png', dpi=300)  # Adjust dpi for quality if needed
 # Optionally, if you want to close the plot to free up memory:
 plt.close()
 print("Saved umap1.png")
@@ -259,7 +263,7 @@ for i, (pos, covar, w) in enumerate(zip(gmm.means_, gmm.covariances_, gmm.weight
 
 plt.title('UMAP Projection of Audio Features with GMM Clustering and Cluster Labels')
 plt.colorbar(label='GMM Cluster')
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap1+GMM.png', dpi=300)  # Adjust dpi for quality if needed
+plt.savefig('/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_UMAP/umap1+GMM.png', dpi=300)  # Adjust dpi for quality if needed
 plt.close()
 print("Saved umap1+GMM.png")
 
@@ -303,10 +307,10 @@ print("reduced to 2 2")
 
 
 # Mapping from single letters to words for descriptive labels
-#class_mapping = {'H': 'Healthy', 'D': 'Degraded', 'R': 'Restored', 'N': 'Newly-Restored'}
-#color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue', 'Newly-Restored' : 'yellow'}
-class_mapping = {'Healthy': 'Healthy', 'Degraded': 'Degraded', 'Restored': 'Restored'}
-color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue'}
+class_mapping = {'H': 'Healthy', 'D': 'Degraded', 'R': 'Restored', 'N': 'Newly-Restored'}
+color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue', 'Newly-Restored' : 'yellow'}
+#class_mapping = {'Healthy': 'Healthy', 'Degraded': 'Degraded', 'Restored': 'Restored'}
+#color_mapping = {'Healthy': 'green', 'Degraded': 'red', 'Restored': 'blue'}
 
 
 # Set up the plot
@@ -321,7 +325,7 @@ for class_type, label in class_mapping.items():
 
 plt.title('UMAP Projection of Audio Features')
 plt.legend(title='Class Label')  # Adds a legend with a title
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap2.png', dpi=300)  # Adjust dpi for quality if needed
+plt.savefig('/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_UMAP/umap2.png', dpi=300)  # Adjust dpi for quality if needed
 plt.close()
 print("Saved umap2.png")
 
@@ -372,7 +376,7 @@ for i, (pos, covar, w) in enumerate(zip(gmm.means_, gmm.covariances_, gmm.weight
 
 plt.title('UMAP Projection of Audio Features with GMM Clustering and Cluster Labels')
 plt.colorbar(label='GMM Cluster')
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap2+GMM.png', dpi=300)  # Adjust dpi for quality if needed
+plt.savefig('/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_UMAP/umap2+GMM.png', dpi=300)  # Adjust dpi for quality if needed
 plt.close()
 print("Saved umap2+GMM.png")
 
@@ -383,8 +387,11 @@ import os
 import shutil
 import pandas as pd
 import random
+import re
 
 
+"""
+#old
 def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n_samples):
     
     # Create the destination base folder if it doesn't exist
@@ -412,10 +419,49 @@ def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n
             # Copy the file to the appropriate cluster folder
             shutil.copy2(source_file, destination_file)
             print(f"Copied {source_file} to {destination_file}")
+"""        
+            
+            
+#new with spectral energy sort    
+def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n_samples):
+    # Create the destination base folder if it doesn't exist
+    if not os.path.exists(destination_base_folder):
+        os.makedirs(destination_base_folder)
+    
+    # Regular expression pattern to extract the numeric suffix after an underscore
+    suffix_pattern = re.compile(r'_(\d+)$')
+    
+    # Iterate through each cluster in the DataFrame
+    for cluster in df['cluster'].unique():
+        # Filter the DataFrame for the current cluster
+        cluster_df = df[df['cluster'] == cluster]
+        
+        # Extract numeric suffix and sort by this suffix in descending order
+        cluster_df['suffix'] = cluster_df['filename'].apply(
+            lambda x: int(suffix_pattern.search(x).group(1)) if suffix_pattern.search(x) else -1
+        )
+        sorted_files = cluster_df.sort_values(by='suffix', ascending=False)
+        
+        # Select the top `n_samples` files based on the highest suffix
+        selected_files = sorted_files.head(n_samples)
+        
+        # Create a folder for the current cluster
+        cluster_folder = os.path.join(destination_base_folder, f"cluster_{cluster}")
+        if not os.path.exists(cluster_folder):
+            os.makedirs(cluster_folder)
+        
+        # Iterate through the selected files and copy them
+        for _, row in selected_files.iterrows():
+            source_file = os.path.join(source_base_folder, row['filename'])
+            destination_file = os.path.join(cluster_folder, os.path.basename(row['filename']))
+            
+            # Copy the file to the appropriate cluster folder
+            shutil.copy2(source_file, destination_file)
+            print(f"Copied {source_file} to {destination_file}")
 
 
 
-source_base_folder = "/mnt/d/Aqoustics/BEN/Australia_ROI/"
-destination_base_folder = "/mnt/d/Aqoustics/BEN/Australia_Clusters/"
+source_base_folder = "/mnt/d/Aqoustics/BEN/Indonesia/"
+destination_base_folder = "/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_Clusters/"
 n_samples = 100
 organize_clips_by_cluster(filtered_df, source_base_folder, destination_base_folder,n_samples)

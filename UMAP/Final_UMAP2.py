@@ -13,9 +13,11 @@ from chirp.inference import tf_examples
 
 # To get reproducabel results, we set the seed
 random_seed = 42
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
 # Path to the directory containing the TFRecord files
-tfrecord_dir  = '/mnt/d/Aqoustics/BEN/Australia_Embeddings/'
+tfrecord_dir  = '/mnt/d/Aqoustics/BEN/Kenya/Kenya_Embeddings/'
+
 
 
 
@@ -117,7 +119,7 @@ def read_embeddings_to_dataframe(tfrecord_files):
 
 
 # Path to the directory containing the TFRecord files
-tfrecord_dir = '/mnt/d/Aqoustics/BEN/Australia_Embeddings/'
+tfrecord_dir = '/mnt/d/Aqoustics/BEN/Kenya/Kenya_Embeddings/'
 
 # List the TFRecord files in the directory
 file_list = list_files_in_folder(tfrecord_dir)
@@ -174,7 +176,9 @@ import umap
 n_neighbors = 13
 min_dist = 0.1
 
-sampled_data = features_metadata_df.sample(frac=0.05, random_state=random_seed)
+#sampled_data = features_metadata_df.sample(frac=0.05, random_state=random_seed)
+sampled_data = features_metadata_df.sample(frac=0.5, random_state=random_seed)
+
 umap_reducer = umap.UMAP(n_components=128, random_state=random_seed, n_neighbors=n_neighbors, min_dist=min_dist)
 umap_reducer.fit(sampled_data.iloc[:, 2:])
 reduced_features_128 = umap_reducer.transform(features_metadata_df.iloc[:, 2:])
@@ -201,7 +205,7 @@ plt.title('UMAP Projection of Audio Features')
 plt.legend(title='Class Label')  # Adds a legend with a title
 
 # Save the plot as an image file in the specified directory
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap1.png', dpi=300)  # Adjust dpi for quality if needed
+plt.savefig('/mnt/d/Aqoustics/BEN/Kenya/Kenya_UMAP/umap1.png', dpi=300)  # Adjust dpi for quality if needed
 # Optionally, if you want to close the plot to free up memory:
 plt.close()
 print("Saved umap1.png")
@@ -255,7 +259,7 @@ for i, (pos, covar, w) in enumerate(zip(gmm.means_, gmm.covariances_, gmm.weight
 
 plt.title('UMAP Projection of Audio Features with GMM Clustering and Cluster Labels')
 plt.colorbar(label='GMM Cluster')
-plt.savefig('/mnt/d/Aqoustics/BEN/Australia_UMAP/umap2.png', dpi=300)  # Adjust dpi for quality if needed
+plt.savefig('/mnt/d/Aqoustics/BEN/Kenya/Kenya_UMAP/umap2.png', dpi=300)  # Adjust dpi for quality if needed
 plt.close()
 print("Saved umap2.png")
 
@@ -304,7 +308,7 @@ def organize_clips_by_cluster(df, source_base_folder, destination_base_folder, n
 
 
 
-source_base_folder = "/mnt/d/Aqoustics/BEN/Australia_ROI/"
-destination_base_folder = "/mnt/d/Aqoustics/BEN/Australia_Clusters/"
+source_base_folder = "/mnt/d/Aqoustics/BEN/Kenya/Kenya_ROI/"
+destination_base_folder = "/mnt/d/Aqoustics/BEN/Kenya/Kenya_Clusters/"
 n_samples = 100
 organize_clips_by_cluster(features_metadata_df, source_base_folder, destination_base_folder,n_samples)

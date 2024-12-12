@@ -15,12 +15,14 @@ from audioread import NoBackendError
 from chunk import Chunk
 import aifc
 import wave
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Set the root directory for Australia_ROI
-root_dir = '/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_ROI/'
+# Set the root directory for audio files
+root_dir = '/mnt/d/Aqoustics/BEN/Maldives/Maldives_ROI/'
 
 # Define the model
-model_choice = 'perch'  #@param
+model_choice = 'perch'
 
 config = config_dict.ConfigDict()
 config.embed_fn_config = config_dict.ConfigDict()
@@ -29,7 +31,7 @@ config.embed_fn_config.model_config = config_dict.ConfigDict()
 # Recursive function to gather all .wav files from subdirectories with progress bar
 def gather_audio_files(root_dir):
     audio_files = []
-    total_files = sum([len(files) for _, _, files in os.walk(root_dir)])  # To estimate total files
+    total_files = sum([len(files) for _, _, files in os.walk(root_dir)])  # Estimate total files
     with tqdm.tqdm(total=total_files, desc="Gathering audio files") as pbar:
         for dirpath, _, filenames in os.walk(root_dir):
             for file in filenames:
@@ -43,7 +45,7 @@ def gather_audio_files(root_dir):
     return audio_files
 
 config.source_file_patterns = gather_audio_files(root_dir)
-config.output_dir = '/mnt/d/Aqoustics/BEN/Indonesia/New_Indonesia_Embeddings'
+config.output_dir = '/mnt/d/Aqoustics/BEN/Maldives/Maldives_Embeddings'
 
 # For Perch, the directory containing the model.
 perch_model_path = '/home/os/aqoustics/Aqoustics-Surfperch/kaggle'
@@ -82,16 +84,48 @@ source_infos = embed_lib.create_source_infos(
     shard_len_s=config.get('shard_len_s', -1))
 print(f'Found {len(source_infos)} source infos.')
 
-# Function to safely load audio files
-def safe_load_audio(filepath: str, sample_rate: int):
+# Function to safely load audio files and keep only the first 2 seconds and last 3 seconds of a 5-second clip
+def safe_load_audio(filepath: str, sample_rate: int, clip_duration: int = 5, pad_duration_start: int = 1, pad_duration_end: int = 2):
     try:
-        audio, sr = librosa.load(filepath, sr=sample_rate)
-        return audio
+        # Load the audio with the specified duration
+        audio, sr = librosa.load(filepath, sr=sample_rate, duration=clip_duration)
+        
+        # Ensure audio is exactly clip_duration long (truncate or zero-pad if needed)
+        audio_duration_samples = clip_duration * sample_rate
+        if len(audio) < audio_duration_samples:
+            # Zero-pad to make the audio exactly 5 seconds
+            audio = np.pad(audio, (0, audio_duration_samples - len(audio)), mode='constant')
+        else:
+            # Truncate to exactly 5 seconds
+            audio = audio[:audio_duration_samples]
+        
+        # Extract the middle section (2nd and 3rd seconds)
+        middle_section = audio[sample_rate:3 * sample_rate]
+        
+        # Create the final padded audio with zeros in the 1st second and last 2 seconds
+        padded_audio = np.concatenate((np.zeros(pad_duration_start * sample_rate), middle_section, np.zeros(pad_duration_end * sample_rate)))
+        
+        return padded_audio
     except (librosa.util.exceptions.ParameterError, sf.LibsndfileError, NoBackendError, EOFError, wave.Error, aifc.Error) as e:
         print(f"Skipping file {filepath}: {str(e)}")
         return None
 
-# Set up the audio loader function
+
+# Test the padding on a single audio file before the main loop
+sample_audio_file = config.source_file_patterns[0]  # Take the first audio file from the gathered list
+sample_audio = safe_load_audio(sample_audio_file, config.embed_fn_config.model_config.sample_rate)
+
+# Plot the original and padded audio waveforms for the first audio file
+if sample_audio is not None:
+    time_axis = np.linspace(0, len(sample_audio) / config.embed_fn_config.model_config.sample_rate, num=len(sample_audio))
+    plt.figure(figsize=(12, 4))
+    plt.plot(time_axis, sample_audio)
+    plt.title("Padded Audio Waveform (Last 3 Seconds Zero-Padded, First 2 Seconds Retained)")
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Amplitude")
+    plt.show()
+
+# Set up the audio loader function for the main loop
 audio_loader = lambda fp, offset: safe_load_audio(fp, config.embed_fn_config.model_config.sample_rate)
 
 # Initialize counters for successful, failed, and skipped files
@@ -101,7 +135,7 @@ succ, fail, skipped = 0, 0, 0
 audio_iterator = None
 
 try:
-    # Use source_infos instead of new_source_infos
+    # Use source_infos for audio iterator
     audio_iterator = audio_utils.multi_load_audio_window(
         filepaths=[s.filepath for s in source_infos],
         offsets=[s.shard_num * s.shard_len_s for s in source_infos],
